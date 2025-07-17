@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Management Plan Request - CopTTM Compliant</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(248, 249, 250, 0.8);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .radio-item:hover {
+            border-color: #667eea;
+            transform: translateY(-1px);
+        }
+
+        .radio-item input[type="radio"] {
+            width: auto;
+            margin-right: 10px;
+            transform: scale(1.2);
+        }
+
+        .radio-item input[type="radio"]:checked + label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        #map {
+            height: 400px;
+            border-radius: 15px;
+            border: 3px solid #e9ecef;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .copttm-info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .copttm-info h3 {
+            color: #2980b9;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Traffic Management Plan Request</h1>
+            <p>CopTTM Compliant Application Form</p>
+        </div>
+
+        <div class="form-container">
+            <div class="copttm-info">
+                <h3>CopTTM Compliance Notice</h3>
+                <p>This form complies with New Zealand's Code of Practice for Temporary Traffic Management (CopTTM). All mandatory information required for traffic management plan approval is collected through this system.</p>
+            </div>
+
+            <form id="tmpForm">
+                <!-- Contractor Details -->
+                <div class="form-section">
+                    <h2 class="section-title">Contractor Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="contractorName">Company Name <span class="required">*</span></label>
+                            <input type="text" id="contractorName" name="contractorName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contractorContact">Primary Contact Person <span class="required">*</span></label>
+                            <input type="text" id="contractorContact" name="contractorContact" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contractorEmail">Email Address <span class="required">*</span></label>
+                            <input type="email" id="contractorEmail" name="contractorEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contractorPhone">Phone Number <span class="required">*</span></label>
+                            <input type="tel" id="contractorPhone" name="contractorPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contractorAddress">Business Address <span class="required">*</span></label>
+                            <textarea id="contractorAddress" name="contractorAddress" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="copttmCertification">CopTTM Certification Number</label>
+                            <input type="text" id="copttmCertification" name="copttmCertification">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Principal Details -->
+                <div class="form-section">
+                    <h2 class="section-title">Principal Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="principalName">Principal/Client Name <span class="required">*</span></label>
+                            <input type="text" id="principalName" name="principalName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="principalContact">Contact Person <span class="required">*</span></label>
+                            <input type="text" id="principalContact" name="principalContact" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="principalEmail">Email Address <span class="required">*</span></label>
+                            <input type="email" id="principalEmail" name="principalEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="principalPhone">Phone Number <span class="required">*</span></label>
+                            <input type="tel" id="principalPhone" name="principalPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="principalAddress">Address</label>
+                            <textarea id="principalAddress" name="principalAddress"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Details -->
+                <div class="form-section">
+                    <h2 class="section-title">Work Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="workType">Type of Work <span class="required">*</span></label>
+                            <select id="workType" name="workType" required>
+                                <option value="">Select work type</option>
+                                <option value="roadworks">Road Works</option>
+                                <option value="utilities">Utilities Work</option>
+                                <option value="maintenance">Road Maintenance</option>
+                                <option value="construction">Construction</option>
+                                <option value="emergency">Emergency Repairs</option>
+                                <option value="events">Event Management</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="workLocation">Work Location/Address <span class="required">*</span></label>
+                            <input type="text" id="workLocation" name="workLocation" required placeholder="Click on map or enter address">
+                        </div>
+                        <div class="form-group">
+                            <label for="roadLevel">Road Level (CopTTM Classification) <span class="required">*</span></label>
+                            <select id="roadLevel" name="roadLevel" required>
+                                <option value="">Select road level</option>
+                                <option value="LV">LV - Low Volume Road</option>
+                                <option value="L1">L1 - Level 1 Road</option>
+                                <option value="2LS">2LS - Two Lane State Highway</option>
+                                <option value="L2">L2 - Level 2 Road</option>
+                                <option value="L3">L3 - Level 3 Road</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="scopeOfWork">Scope of Work <span class="required">*</span></label>
+                        <textarea id="scopeOfWork" name="scopeOfWork" required placeholder="Provide detailed description of work to be undertaken"></textarea>
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="form-section">
+                    <h2 class="section-title">Work Schedule</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="startDate">Start Date <span class="required">*</span></label>
+                            <input type="date" id="startDate" name="startDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endDate">End Date <span class="required">*</span></label>
+                            <input type="date" id="endDate" name="endDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">Duration (Days) <span class="required">*</span></label>
+                            <input type="number" id="duration" name="duration" min="1" required readonly>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Work Shift <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <input type="radio" id="dayShift" name="workShift" value="day" required>
+                                <label for="dayShift">Day Shift Only</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="nightShift" name="workShift" value="night" required>
+                                <label for="nightShift">Night Shift Only</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" id="bothShifts" name="workShift" value="both" required>
+                                <label for="bothShifts">Both Day & Night</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicles and Equipment -->
+                <div class="form-section">
+                    <h2 class="section-title">Vehicles and Equipment</h2>
+                    <div class="form-group">
+                        <label>Vehicle Types (Select all that apply)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="trucks" name="vehicles" value="trucks">
+                                <label for="trucks">Trucks</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="excavators" name="vehicles" value="excavators">
+                                <label for="excavators">Excavators</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="cranes" name="vehicles" value="cranes">
+                                <label for="cranes">Cranes</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="rollers" name="vehicles" value="rollers">
+                                <label for="rollers">Rollers</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="tractors" name="vehicles" value="tractors">
+                                <label for="tractors">Tractors</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="utility" name="vehicles" value="utility">
+                                <label for="utility">Utility Vehicles</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="vehicleDetails">Vehicle and Equipment Details</label>
+                        <textarea id="vehicleDetails" name="vehicleDetails" placeholder="Provide details of vehicles, equipment, and their specifications"></textarea>
+                    </div>
+                </div>
+
+                <!-- Interactive Map -->
+                <div class="form-section">
+                    <h2 class="section-title">Work Location Map</h2>
+                    <div id="map"></div>
+                    <div class="map-info">
+                        <p><strong>Instructions:</strong> Click on the map to mark your work location. The coordinates will be automatically recorded.</p>
+                        <p id="coordinates">Coordinates: Not selected</p>
+                    </div>
+                </div>
+
+                <!-- Special Requests -->
+                <div class="form-section">
+                    <h2 class="section-title">Special Requests</h2>
+                    <div class="form-group">
+                        <label>Special Requirements (Select all that apply)</label>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="24hour" name="specialRequests" value="24hour">
+                                <label for="24hour">24 Hour Deployment</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="outsideHours" name="specialRequests" value="outsideHours">
+                                <label for="outsideHours">Outside Normal Hours</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="weekendWork" name="specialRequests" value="weekendWork">
+                                <label for="weekendWork">Weekend Work</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="emergencyResponse" name="specialRequests" value="emergencyResponse">
+                                <label for="emergencyResponse">Emergency Response</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialNotes">Additional Special Requests/Notes</label>
+                        <textarea id="specialNotes" name="specialNotes" placeholder="Describe any special requirements or additional information"></textarea>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <button type="submit" class="submit-btn">Submit TMP Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize map
+        let map = L.map('map').setView([-41.2865, 174.7762], 6); // New Zealand center
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let marker = null;
+        let selectedCoordinates = null;
+
+        // Map click handler
+        map.on('click', function(e) {
+            if (marker) {
+                map.removeLayer(marker);
+            }
+            
+            marker = L.marker(e.latlng).addTo(map);
+            selectedCoordinates = e.latlng;
+            
+            document.getElementById('coordinates').textContent = 
+                `Coordinates: ${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
+            
+            // Reverse geocoding to get address
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&zoom=18&addressdetails=1`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.display_name) {
+                        document.getElementById('workLocation').value = data.display_name;
+                    }
+                })
+                .catch(error => console.log('Geocoding error:', error));
+        });
+
+        // Date calculation
+        function calculateDuration() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                const timeDiff = end.getTime() - start.getTime();
+                const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                
+                document.getElementById('duration').value = dayDiff > 0 ? dayDiff : 1;
+            }
+        }
+
+        document.getElementById('startDate').addEventListener('change', calculateDuration);
+        document.getElementById('endDate').addEventListener('change', calculateDuration);
+
+        // Form submission
+        document.getElementById('tmpForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedCoordinates) {
+                alert('Please select a location on the map');
+                return;
+            }
+            
+            // Collect form data
+            const formData = new FormData(this);
+            
+            // Add coordinates
+            formData.append('latitude', selectedCoordinates.lat);
+            formData.append('longitude', selectedCoordinates.lng);
+            
+            // Collect checkbox values
+            const vehicles = [];
+            document.querySelectorAll('input[name="vehicles"]:checked').forEach(cb => {
+                vehicles.push(cb.value);
+            });
+            
+            const specialRequests = [];
+            document.querySelectorAll('input[name="specialRequests"]:checked').forEach(cb => {
+                specialRequests.push(cb.value);
+            });
+            
+            // Create email body
+            let emailBody = "TRAFFIC MANAGEMENT PLAN REQUEST - CopTTM COMPLIANT\n\n";
+            
+            emailBody += "=== CONTRACTOR DETAILS ===\n";
+            emailBody += `Company Name: ${formData.get('contractorName')}\n`;
+            emailBody += `Primary Contact: ${formData.get('contractorContact')}\n`;
+            emailBody += `Email: ${formData.get('contractorEmail')}\n`;
+            emailBody += `Phone: ${formData.get('contractorPhone')}\n`;
+            emailBody += `Address: ${formData.get('contractorAddress')}\n`;
+            emailBody += `CopTTM Certification: ${formData.get('copttmCertification') || 'Not provided'}\n\n`;
+            
+            emailBody += "=== PRINCIPAL DETAILS ===\n";
+            emailBody += `Principal Name: ${formData.get('principalName')}\n`;
+            emailBody += `Contact Person: ${formData.get('principalContact')}\n`;
+            emailBody += `Email: ${formData.get('principalEmail')}\n`;
+            emailBody += `Phone: ${formData.get('principalPhone')}\n`;
+            emailBody += `Address: ${formData.get('principalAddress') || 'Not provided'}\n\n`;
+            
+            emailBody += "=== WORK DETAILS ===\n";
+            emailBody += `Type of Work: ${formData.get('workType')}\n`;
+            emailBody += `Work Location: ${formData.get('workLocation')}\n`;
+            emailBody += `Road Level: ${formData.get('roadLevel')}\n`;
+            emailBody += `Scope of Work: ${formData.get('scopeOfWork')}\n\n`;
+            
+            emailBody += "=== SCHEDULE ===\n";
+            emailBody += `Start Date: ${formData.get('startDate')}\n`;
+            emailBody += `End Date: ${formData.get('endDate')}\n`;
+            emailBody += `Duration: ${formData.get('duration')} days\n`;
+            emailBody += `Work Shift: ${formData.get('workShift')}\n\n`;
+            
+            emailBody += "=== VEHICLES AND EQUIPMENT ===\n";
+            emailBody += `Vehicle Types: ${vehicles.join(', ') || 'None selected'}\n`;
+            emailBody += `Vehicle Details: ${formData.get('vehicleDetails') || 'Not provided'}\n\n`;
+            
+            emailBody += "=== LOCATION COORDINATES ===\n";
+            emailBody += `Latitude: ${selectedCoordinates.lat}\n`;
+            emailBody += `Longitude: ${selectedCoordinates.lng}\n\n`;
+            
+            emailBody += "=== SPECIAL REQUESTS ===\n";
+            emailBody += `Special Requirements: ${specialRequests.join(', ') || 'None'}\n`;
+            emailBody += `Additional Notes: ${formData.get('specialNotes') || 'None'}\n\n`;
+            
+            emailBody += "=== COMPLIANCE NOTICE ===\n";
+            emailBody += "This request has been submitted through a CopTTM compliant form and contains all required information for traffic management plan assessment.\n";
+            
+            // Create mailto link
+            const subject = encodeURIComponent(`TMP Request - ${formData.get('contractorName')} - ${formData.get('workLocation')}`);
+            const body = encodeURIComponent(emailBody);
+            const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+            
+            // Open email client
+            window.location.href = mailtoLink;
+            
+            // Show success message
+            alert('Email client opened with your TMP request. Please send the email to the appropriate traffic management authority.');
+        });
+    </script>
+</body>
+</html>
